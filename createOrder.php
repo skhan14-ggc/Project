@@ -1,160 +1,93 @@
+<?php
+require_once "config.php";
+
+function escape($v) {
+    return htmlspecialchars($v, ENT_QUOTES, 'UTF-8');
+}
+
+// Fetch product groups
+function getProducts($catId, $link) {
+    $sql = "SELECT * FROM products WHERE category_id = $catId ORDER BY product_id";
+    return mysqli_query($link, $sql);
+}
+
+$coffee = getProducts(1, $link);
+$milk   = getProducts(2, $link);
+$syrup  = getProducts(3, $link);
+$addon  = getProducts(4, $link);
+?>
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Sunkissed Coffee - Create Order</title>
+    <title>Create Order</title>
     <link rel="stylesheet"
           href="https://www.w3schools.com/w3css/4/w3.css">
-
-    <style>
-        body{
-            background-color:#f5f5f5;
-        }
-
-        .header-area{
-            background-color:#f2d7b5;
-            padding:20px;
-            text-align:center;
-        }
-
-        .logo-img{
-            width:90px;
-            display:block;
-            margin-left:auto;
-            margin-right:auto;
-        }
-
-        .order-area{
-            background-color:#fff8e6;
-            padding:20px;
-        }
-
-        .price-table{
-            margin-top:20px;
-        }
-    </style>
 </head>
-<body>
+<body class="w3-theme-l5">
 
-<div class="w3-container w3-card w3-white">
-    <div class="header-area w3-card w3-sand">
-        <img src="1.jpg" alt="Coffee Logo" class="logo-img">
-        <h1 class="w3-text-brown"><b>Sunkissed Coffee</b></h1>
-        <h3><b>Fresh • Local • Handcrafted</b></h3>
-    </div>
+<header class="w3-container w3-center w3-padding-32 w3-sand">
+    <img src="images/1.jpg" style="width:90px;">
+    <h1 class="w3-xxxlarge w3-text-brown"><b>Create Your Order</b></h1>
+</header>
+
+<div class="w3-container w3-padding">
+
+<form action="receiveOrder.php" method="POST" class="w3-card w3-white w3-padding">
+
+    <label><b>Select Drink</b></label>
+    <select name="drink" class="w3-select w3-border" required>
+        <option value="">Choose...</option>
+        <?php while ($d = mysqli_fetch_assoc($coffee)): ?>
+            <option value="<?php echo $d['product_id']; ?>">
+                <?php echo escape($d['name']); ?> ($<?php echo number_format($d['price'], 2); ?>)
+            </option>
+        <?php endwhile; ?>
+    </select>
+
+    <br><br>
+
+    <label><b>Milk Option</b></label>
+    <select name="milk" class="w3-select w3-border" required>
+        <option value="">Choose...</option>
+        <?php while ($m = mysqli_fetch_assoc($milk)): ?>
+            <option value="<?php echo $m['product_id']; ?>">
+                <?php echo escape($m['name']); ?> ($<?php echo number_format($m['price'], 2); ?>)
+            </option>
+        <?php endwhile; ?>
+    </select>
+
+    <br><br>
+
+    <label><b>Syrup</b></label>
+    <select name="syrup" class="w3-select w3-border" required>
+        <option value="">Choose...</option>
+        <?php while ($s = mysqli_fetch_assoc($syrup)): ?>
+            <option value="<?php echo $s['product_id']; ?>">
+                <?php echo escape($s['name']); ?> ($<?php echo number_format($s['price'], 2); ?>)
+            </option>
+        <?php endwhile; ?>
+    </select>
+
+    <br><br>
+
+    <label><b>Add-on</b></label>
+    <select name="addon" class="w3-select w3-border" required>
+        <option value="">Choose...</option>
+        <?php while ($a = mysqli_fetch_assoc($addon)): ?>
+            <option value="<?php echo $a['product_id']; ?>">
+                <?php echo escape($a['name']); ?> ($<?php echo number_format($a['price'], 2); ?>)
+            </option>
+        <?php endwhile; ?>
+    </select>
+
+    <br><br>
+
+    <button class="w3-button w3-brown w3-xlarge w3-text-white" type="submit">
+        Submit Order
+    </button>
+
+</form>
+
 </div>
-
-<div class="order-area w3-pale-yellow">
-    <form action="receiveOrder.php" method="post">
-
-        <label><b>Drink</b></label>
-        <select class="w3-select w3-border w3-white" name="drink" required>
-            <option value="Americano">Americano</option>
-            <option value="Latte">Latte</option>
-            <option value="Cappuccino">Cappuccino</option>
-            <option value="Espresso">Espresso</option>
-            <option value="Macchiato">Macchiato</option>
-            <option value="Mocha">Mocha</option>
-            <option value="Cold Brew">Cold Brew</option>
-            <option value="Iced Latte">Iced Latte</option>
-            <option value="Iced Americano">Iced Americano</option>
-            <option value="Frappe">Frappe</option>
-            <option value="Hot Chocolate">Hot Chocolate</option>
-            <option value="Chai Latte">Chai Latte</option>
-            <option value="Matcha Latte">Matcha Latte</option>
-        </select>
-
-        <br><br>
-
-        <label><b>Size</b></label>
-        <select class="w3-select w3-border w3-white" name="size" required>
-            <option value="Small">Small (12oz)</option>
-            <option value="Medium">Medium (16oz)</option>
-            <option value="Large">Large (20oz)</option>
-        </select>
-
-        <br><br>
-
-        <label><b>Milk</b></label>
-        <select class="w3-select w3-border w3-white" name="milk" required>
-            <option value="Whole Milk">Whole Milk</option>
-            <option value="2% Milk">2% Milk</option>
-            <option value="Oat Milk">Oat Milk</option>
-            <option value="Almond Milk">Almond Milk</option>
-            <option value="Soy Milk">Soy Milk</option>
-        </select>
-
-        <br><br>
-
-        <label><b>Syrup</b></label>
-        <select class="w3-select w3-border w3-white" name="syrup">
-            <option value="None">None</option>
-            <option value="Vanilla">Vanilla</option>
-            <option value="Caramel">Caramel</option>
-            <option value="Hazelnut">Hazelnut</option>
-            <option value="Mocha">Mocha</option>
-            <option value="Lavender">Lavender</option>
-        </select>
-
-        <br><br>
-
-        <label><b>Add-ons</b></label>
-        <select class="w3-select w3-border w3-white" name="addon">
-            <option value="None">None</option>
-            <option value="Extra Shot">Extra Shot</option>
-            <option value="Whipped Cream">Whipped Cream</option>
-            <option value="Cold Foam">Cold Foam</option>
-        </select>
-
-        <br><br>
-
-        <input type="submit"
-               value="Submit Order"
-               class="w3-button w3-brown w3-text-white">
-
-    </form>
-</div>
-
-<div class="price-table">
-    <table class="w3-table-all">
-
-        <tr class="w3-brown w3-text-white">
-            <th>Item</th>
-            <th>Price</th>
-        </tr>
-
-        <tr class="w3-white">
-            <td>Small (12oz)</td>
-            <td>$3.50</td>
-        </tr>
-        <tr class="w3-sand">
-            <td>Medium (16oz)</td>
-            <td>$4.25</td>
-        </tr>
-        <tr class="w3-white">
-            <td>Large (20oz)</td>
-            <td>$5.00</td>
-        </tr>
-
-        <tr class="w3-sand">
-            <td>Extra Shot</td>
-            <td>$1.00</td>
-        </tr>
-        <tr class="w3-white">
-            <td>Whipped Cream</td>
-            <td>$0.50</td>
-        </tr>
-        <tr class="w3-sand">
-            <td>Cold Foam</td>
-            <td>$0.75</td>
-        </tr>
-
-        <tr class="w3-white">
-            <td>Any Syrup</td>
-            <td>$0.50</td>
-        </tr>
-
-    </table>
-</div>
-
 </body>
 </html>
