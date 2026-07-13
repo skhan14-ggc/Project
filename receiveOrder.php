@@ -123,7 +123,7 @@ function escape($value) {
 <body>
 <div class="w3-container w3-card w3-white">
     <div class="header-area w3-card w3-pale-yellow">
-        <img src="images/1.jpg" alt="Coffee Logo" class="logo-img">
+        <img src="1.jpg" alt="Coffee Logo" class="logo-img">
         <h1 class="w3-text-brown"><b>Sunkissed Coffee</b></h1>
         <h2><b>Order Receipt</b></h2>
         <p><a href="createOrder.php" class="w3-button w3-brown w3-text-white">Place a new order</a></p>
