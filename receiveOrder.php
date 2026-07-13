@@ -1,167 +1,85 @@
 <?php
+require_once "config.php";
+
+function escape($v) {
+    return htmlspecialchars($v, ENT_QUOTES, 'UTF-8');
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: menu.php');
+    header("Location: createOrder.php");
     exit;
 }
 
-$drink = $_POST['drink'] ?? '';
-$size = $_POST['size'] ?? '';
-$milk = $_POST['milk'] ?? '';
-$syrup = $_POST['syrup'] ?? '';
-$addon = $_POST['addon'] ?? '';
+$drink = intval($_POST['drink']);
+$milk  = intval($_POST['milk']);
+$syrup = intval($_POST['syrup']);
+$addon = intval($_POST['addon']);
 
-$prices = [
-    'Small' => 3.50,
-    'Medium' => 4.25,
-    'Large' => 5.00,
-];
+$items = [$drink, $milk, $syrup, $addon];
 
-$addonPrices = [
-    'None' => 0.00,
-    'Extra Shot' => 1.00,
-    'Whipped Cream' => 0.50,
-    'Cold Foam' => 0.75,
-];
+// Fetch product prices
+$total = 0;
+$details = [];
 
-$syrupPrices = [
-    'None' => 0.00,
-    'Vanilla' => 0.50,
-    'Caramel' => 0.50,
-    'Hazelnut' => 0.50,
-    'Mocha' => 0.50,
-    'Lavender' => 0.50,
-];
+foreach ($items as $pid) {
+    $sql = "SELECT * FROM products WHERE product_id = $pid";
+    $res = mysqli_query($link, $sql);
+    $p = mysqli_fetch_assoc($res);
 
-$total = 0.00;
-if (isset($prices[$size])) {
-    $total += $prices[$size];
-}
-if (isset($addonPrices[$addon])) {
-    $total += $addonPrices[$addon];
-}
-if (isset($syrupPrices[$syrup])) {
-    $total += $syrupPrices[$syrup];
+    $total += floatval($p['price']);
+    $details[] = $p;
 }
 
-$ordersFile = __DIR__ . '/orders.json';
-$orders = [];
-if (file_exists($ordersFile)) {
-    $stored = file_get_contents($ordersFile);
-    $orders = json_decode($stored, true) ?: [];
-}
+// Insert order
+$orderSql = "INSERT INTO orders (customer_id, date, status, total)
+             VALUES (NULL, NOW(), 'Submitted', $total)";
+mysqli_query($link, $orderSql);
 
-$orderId = 1;
-if (!empty($orders)) {
-    $ids = array_column($orders, 'order_id');
-    $orderId = max($ids) + 1;
-}
+$orderId = mysqli_insert_id($link);
 
-$newOrder = [
-    'order_id' => $orderId,
-    'date' => date('Y-m-d H:i:s'),
-    'drink' => $drink,
-    'size' => $size,
-    'milk' => $milk,
-    'syrup' => $syrup,
-    'addon' => $addon,
-    'total' => number_format($total, 2),
-    'status' => 'Submitted'
-];
-
-$orders[] = $newOrder;
-file_put_contents($ordersFile, json_encode($orders, JSON_PRETTY_PRINT));
-
-function escape($value) {
-    return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+// Insert order items
+foreach ($items as $pid) {
+    $itemSql = "INSERT INTO order_items (order_id, product_id, quantity)
+                VALUES ($orderId, $pid, 1)";
+    mysqli_query($link, $itemSql);
 }
 ?>
-
 <!DOCTYPE html>
 <html>
 <head>
     <title>Order Receipt</title>
     <link rel="stylesheet"
           href="https://www.w3schools.com/w3css/4/w3.css">
-
-    <style>
-        .receipt{
-            width:600px;
-            margin:auto;
-            margin-top:50px;
-        }
-
-        .header-area{
-            padding:10px;
-            text-align:center;
-        }
-
-        .logo-img{
-            width:80px;
-            display:block;
-            margin-left:auto;
-            margin-right:auto;
-        }
-
-        .receipt-row {
-            margin-bottom:15px;
-        }
-
-        .receipt-row label {
-            display:block;
-            margin-bottom:5px;
-        }
-
-        .receipt-row input {
-            width:100%;
-            padding:8px;
-            border:1px solid #ccc;
-            border-radius:4px;
-            box-sizing:border-box;
-        }
-    </style>
 </head>
-<body>
-<div class="w3-container w3-card w3-white">
-    <div class="header-area w3-card w3-pale-yellow">
-        <img src="1.jpg" alt="Coffee Logo" class="logo-img">
-        <h1 class="w3-text-brown"><b>Sunkissed Coffee</b></h1>
-        <h2><b>Order Receipt</b></h2>
-        <p><a href="createOrder.php" class="w3-button w3-brown w3-text-white">Place a new order</a></p>
-    </div>
+<body class="w3-theme-l5">
+
+<div class="w3-container w3-card w3-white w3-padding">
+
+    <h2 class="w3-text-brown">Order Received!</h2>
+    <p><b>Order ID:</b> <?php echo escape($orderId); ?></p>
+
+    <table class="w3-table-all">
+        <tr class="w3-brown w3-text-white">
+            <th>Item</th>
+            <th>Price</th>
+        </tr>
+
+        <?php foreach ($details as $d): ?>
+            <tr>
+                <td><?php echo escape($d['name']); ?></td>
+                <td>$<?php echo number_format($d['price'], 2); ?></td>
+            </tr>
+        <?php endforeach; ?>
+
+        <tr class="w3-pale-yellow">
+            <td><b>Total</b></td>
+            <td><b>$<?php echo number_format($total, 2); ?></b></td>
+        </tr>
+    </table>
+
+    <p><a href="createOrder.php" class="w3-button w3-brown w3-text-white">Place Another Order</a></p>
+
 </div>
 
-<div class="receipt w3-card w3-pale-yellow w3-padding">
-    <h2>Order Received!</h2>
-
-    <div class="receipt-row">
-        <label><b>Drink</b></label>
-        <input type="text" readonly value="<?php echo escape($drink); ?>">
-    </div>
-
-    <div class="receipt-row">
-        <label><b>Size</b></label>
-        <input type="text" readonly value="<?php echo escape($size); ?>">
-    </div>
-
-    <div class="receipt-row">
-        <label><b>Milk</b></label>
-        <input type="text" readonly value="<?php echo escape($milk); ?>">
-    </div>
-
-    <div class="receipt-row">
-        <label><b>Syrup</b></label>
-        <input type="text" readonly value="<?php echo escape($syrup); ?>">
-    </div>
-
-    <div class="receipt-row">
-        <label><b>Add-on</b></label>
-        <input type="text" readonly value="<?php echo escape($addon); ?>">
-    </div>
-
-    <div class="receipt-row">
-        <label><b>Total</b></label>
-        <input type="text" readonly value="$<?php echo number_format($total, 2); ?>">
-    </div>
-</div>
 </body>
 </html>
