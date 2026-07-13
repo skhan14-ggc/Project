@@ -37,7 +37,7 @@
 
 <div class="w3-container w3-card w3-white">
     <div class="header-area w3-card w3-sand">
-        <img src="images/1.jpg" alt="Coffee Logo" class="logo-img">
+        <img src="1.jpg" alt="Coffee Logo" class="logo-img">
         <h1 class="w3-text-brown"><b>Sunkissed Coffee</b></h1>
         <h3><b>Fresh • Local • Handcrafted</b></h3>
     </div>
